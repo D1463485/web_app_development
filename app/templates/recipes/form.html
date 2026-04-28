@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}{{ '編輯' if recipe else '新增' }}食譜 - 食譜收藏夾{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom border-light">
+                <h4 class="mb-0 fw-bold text-primary">{{ '📝 編輯食譜' if recipe else '✨ 新增食譜' }}</h4>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <form action="{{ action }}" method="POST">
+                    
+                    <div class="mb-4">
+                        <label for="title" class="form-label fw-bold">食譜名稱 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg" id="title" name="title" required
+                               value="{{ title if title else (recipe.title if recipe else '') }}"
+                               placeholder="例如：日式豬排咖哩飯">
+                    </div>
+
+                    <hr class="my-5 border-light">
+                    <h5 class="mb-3 fw-bold">所需材料 (選填)</h5>
+                    
+                    <div id="ingredients-container" class="mb-3">
+                        {% set current_ingredients = ingredients_data if ingredients_data else (recipe.ingredients if recipe else []) %}
+                        
+                        {% if current_ingredients %}
+                            {% for ing in current_ingredients %}
+                            <div class="row mb-2 ingredient-row align-items-center">
+                                <div class="col-5">
+                                    <input type="text" class="form-control" name="ingredient_name[]" value="{{ ing.name if ing is mapping else ing.name }}" placeholder="名稱 (如: 洋蔥)">
+                                </div>
+                                <div class="col-3">
+                                    <input type="text" class="form-control" name="ingredient_qty[]" value="{{ ing.quantity if ing is mapping else ing.quantity }}" placeholder="數量 (如: 1)">
+                                </div>
+                                <div class="col-3">
+                                    <input type="text" class="form-control" name="ingredient_unit[]" value="{{ ing.unit if ing is mapping else ing.unit }}" placeholder="單位 (如: 顆)">
+                                </div>
+                                <div class="col-1 text-center">
+                                    <button type="button" class="btn btn-outline-danger btn-sm remove-ingredient-btn rounded-circle" title="移除材料">×</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <!-- 預設一列空白 -->
+                            <div class="row mb-2 ingredient-row align-items-center">
+                                <div class="col-5">
+                                    <input type="text" class="form-control" name="ingredient_name[]" placeholder="名稱 (如: 洋蔥)">
+                                </div>
+                                <div class="col-3">
+                                    <input type="text" class="form-control" name="ingredient_qty[]" placeholder="數量 (如: 1)">
+                                </div>
+                                <div class="col-3">
+                                    <input type="text" class="form-control" name="ingredient_unit[]" placeholder="單位 (如: 顆)">
+                                </div>
+                                <div class="col-1 text-center">
+                                    <button type="button" class="btn btn-outline-danger btn-sm remove-ingredient-btn rounded-circle" title="移除材料">×</button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="add-ingredient-btn">+ 新增一項材料</button>
+
+                    <hr class="my-5 border-light">
+
+                    <div class="mb-4">
+                        <label for="instructions" class="form-label fw-bold">料理步驟 <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="instructions" name="instructions" rows="8" required
+                                  placeholder="1. 將洋蔥切丁備用...&#10;2. 熱鍋下油，將洋蔥炒至金黃透亮...">{{ instructions if instructions else (recipe.instructions if recipe else '') }}</textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top border-light">
+                        <a href="{{ url_for('recipes.recipe_detail', recipe_id=recipe.id) if recipe else url_for('recipes.index') }}" class="btn btn-light px-4">取消返回</a>
+                        <button type="submit" class="btn btn-primary px-5 fw-bold">{{ '💾 儲存變更' if recipe else '🚀 建立食譜' }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('ingredients-container');
+    const addBtn = document.getElementById('add-ingredient-btn');
+
+    // 新增材料列
+    addBtn.addEventListener('click', function() {
+        const row = document.createElement('div');
+        row.className = 'row mb-2 ingredient-row align-items-center';
+        row.innerHTML = `
+            <div class="col-5">
+                <input type="text" class="form-control" name="ingredient_name[]" placeholder="名稱 (如: 洋蔥)">
+            </div>
+            <div class="col-3">
+                <input type="text" class="form-control" name="ingredient_qty[]" placeholder="數量 (如: 1)">
+            </div>
+            <div class="col-3">
+                <input type="text" class="form-control" name="ingredient_unit[]" placeholder="單位 (如: 顆)">
+            </div>
+            <div class="col-1 text-center">
+                <button type="button" class="btn btn-outline-danger btn-sm remove-ingredient-btn rounded-circle" title="移除材料">×</button>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+
+    // 刪除材料列 (事件代理)
+    container.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-ingredient-btn')) {
+            const rows = container.querySelectorAll('.ingredient-row');
+            // 如果只剩一列，只清空內容但不刪除 DOM
+            if (rows.length === 1) {
+                const row = e.target.closest('.ingredient-row');
+                row.querySelectorAll('input').forEach(input => input.value = '');
+            } else {
+                e.target.closest('.ingredient-row').remove();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

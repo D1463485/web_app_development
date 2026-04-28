@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}首頁 - 食譜收藏夾{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <h2>我的食譜</h2>
+    </div>
+    <div class="col-md-6">
+        <form action="{{ url_for('recipes.index') }}" method="GET" class="d-flex">
+            <input class="form-control me-2" type="search" name="q" value="{{ q }}" placeholder="搜尋食譜名稱..." aria-label="Search">
+            <button class="btn btn-outline-primary" type="submit">搜尋</button>
+            {% if q %}
+            <a href="{{ url_for('recipes.index') }}" class="btn btn-outline-secondary ms-2">清除</a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for recipe in recipes %}
+    <div class="col">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="card-title">{{ recipe.title }}</h5>
+                <p class="card-text text-muted text-truncate" style="max-height: 4.5em; overflow: hidden;">
+                    {{ recipe.instructions }}
+                </p>
+            </div>
+            <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center pt-0">
+                <small class="text-muted">{{ recipe.created_at.strftime('%Y-%m-%d') }}</small>
+                <a href="{{ url_for('recipes.recipe_detail', recipe_id=recipe.id) }}" class="btn btn-sm btn-primary px-3 rounded-pill">查看詳情</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <div class="p-5 bg-white rounded shadow-sm">
+            <h4 class="text-muted mb-3">找不到任何食譜 😢</h4>
+            {% if q %}
+            <p>沒有名稱包含「{{ q }}」的食譜。</p>
+            <a href="{{ url_for('recipes.index') }}" class="btn btn-outline-primary mt-2">返回所有清單</a>
+            {% else %}
+            <p>趕快點擊右上角或下方按鈕新增你的第一道料理吧！</p>
+            <a href="{{ url_for('recipes.create_recipe') }}" class="btn btn-primary mt-3 px-4">新增食譜</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

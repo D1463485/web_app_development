@@ -1,0 +1,16 @@
+CREATE TABLE recipes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title VARCHAR(100) NOT NULL,
+    instructions TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE ingredients (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipe_id INTEGER NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    quantity VARCHAR(50),
+    unit VARCHAR(20),
+    FOREIGN KEY (recipe_id) REFERENCES recipes (id) ON DELETE CASCADE
+);
